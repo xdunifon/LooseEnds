@@ -21,6 +21,8 @@ public interface ISessionService
 
 public class SessionService(GameContext context, IOptions<GameSettings> options, IHubContext<GameHub> hub) : BaseService(context), ISessionService
 {
+    private GameSettings Settings => options.Value;
+
     private static IQueryable<GameSession> FullStateIncludes(IQueryable<GameSession> query) => query
         .Include(s => s.Players)
             .ThenInclude(p => p.Responses)
@@ -42,7 +44,7 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
 
     public async Task<string> CreateAsync(string gameCode, string hostId)
     {
-        var newGame = new GameSession(hostId, gameCode, options.Value.DefaultPromptingDuration);
+        var newGame = new GameSession(hostId, gameCode, Settings.DefaultPromptingDuration);
 
         _context.GameSessions.Add(newGame);
         await SaveContextAsync();
@@ -60,7 +62,7 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
 
         // Validate that the game can start
         if (game.Rounds.Count > 0) throw GameExceptions.AlreadyStarted(gameCode);
-        if (game.Players.Count < 3) throw GameExceptions.ThreeRequired();
+        if (game.Players.Count < Settings.MinimumPlayers) throw GameExceptions.InvalidPlayerCount(Settings.MinimumPlayers);
 
         game.RoundTimer = roundDurationInSeconds;
 
@@ -72,7 +74,7 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
         }
 
         var promptsPerRound = game.Players.Count / 2;
-        var numPrompts = options.Value.NumberOfRounds * promptsPerRound;
+        var numPrompts = Settings.NumberOfRounds * promptsPerRound;
         
         // Order by random and take first n prompts
         // TODO: Generating a random num for every single entry is not very efficient, replace this in the future
@@ -83,7 +85,7 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
             .ToListAsync();
 
         // Generate rounds
-        for(int i = 0; i < options.Value.NumberOfRounds; i++)
+        for(int i = 0; i < Settings.NumberOfRounds; i++)
         {
             var round = game.AddRound(i + 1);
             
@@ -160,7 +162,7 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
         {
             var nextPrompt = nextRound.RoundPrompts.First();
             nextRound.VotingRoundPrompt = nextPrompt;
-            nextPrompt.VoteDueUtc = DateTime.UtcNow.AddSeconds(options.Value.VotingDuration + 1);
+            nextPrompt.VoteDueUtc = DateTime.UtcNow.AddSeconds(Settings.VotingDuration + 1);
 
             await SaveContextAsync();
 
@@ -201,7 +203,7 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
 
         // Move to next prompt
         nextRound.VotingRoundPrompt = prompt;
-        prompt.VoteDueUtc = DateTime.UtcNow.AddSeconds(options.Value.VotingDuration + 1);
+        prompt.VoteDueUtc = DateTime.UtcNow.AddSeconds(Settings.VotingDuration + 1);
         await SaveContextAsync();
 
         var vDto = new VotingStartedDto(

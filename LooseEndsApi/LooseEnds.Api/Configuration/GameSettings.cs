@@ -5,6 +5,7 @@ public class GameSettings
     public int NumberOfRounds { get; set; }
     public int DefaultPromptingDuration { get; set; }
     public int VotingDuration { get; set; }
+    public int MinimumPlayers { get; set; }
 
     public static void Configure(WebApplicationBuilder builder)
     {
