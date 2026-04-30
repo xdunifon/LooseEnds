@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { useGameStore } from '@/stores/gameStore'
 import LandingPage from '@/pages/LandingPage.vue'
 import PlayerPage from '@/pages/PlayerPage.vue'
