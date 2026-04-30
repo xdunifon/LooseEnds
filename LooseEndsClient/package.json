@@ -17,6 +17,7 @@
     "@primeuix/themes": "^1.0.0",
     "@tailwindcss/vite": "^4.0.17",
     "@tsconfig/node24": "^24.0.4",
+    "@vue/eslint-config-typescript": "^14.7.0",
     "axios": "^1.8.4",
     "npm": "^11.11.0",
     "npm-run-all2": "^8.0.4",

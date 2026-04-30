@@ -1,10 +1,10 @@
 import { computed, ref } from 'vue'
 
-export const useGameTimer = (duration, date) => {
+export const useGameTimer = (duration: number, date: Date | string) => {
   const secondsRemaining = ref(0)
-  let timer
+  let timer: number | undefined
 
-  const startTimerWithDuration = (duration) => {
+  const startTimerWithDuration = (duration: number) => {
     if (timer) timer = undefined
     secondsRemaining.value = duration
 
@@ -15,8 +15,8 @@ export const useGameTimer = (duration, date) => {
     }, 1000)
   }
 
-  const startTimerWithDate = (date) => {
-    const secondsUntilDate = Math.floor((date - new Date()) / 1000)
+  const startTimerWithDate = (date: Date) => {
+    const secondsUntilDate = Math.floor((date.getTime() - new Date().getTime()) / 1000)
     startTimerWithDuration(secondsUntilDate)
   }
 

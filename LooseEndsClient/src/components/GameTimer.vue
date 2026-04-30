@@ -1,20 +1,14 @@
-<script setup>
+<script setup lang="ts">
 import { useGameTimer } from '@/composables/useGameTimer'
 import { ProgressBar } from 'primevue'
 import { onMounted } from 'vue'
 
 defineEmits(['timeUp'])
 
-const props = defineProps({
-  duration: {
-    type: Number,
-    required: false,
-  },
-  date: {
-    type: [Date, String],
-    required: false,
-  },
-})
+const props = defineProps<{
+  duration: number
+  date: Date | string
+}>()
 
 const { secondsRemaining, startTimer, percentageTimeRemaining } = useGameTimer(
   props.duration,
@@ -22,7 +16,7 @@ const { secondsRemaining, startTimer, percentageTimeRemaining } = useGameTimer(
 )
 
 onMounted(() => {
-  startTimer(60)
+  startTimer()
 })
 </script>
 

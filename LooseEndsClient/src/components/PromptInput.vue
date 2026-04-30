@@ -1,10 +1,10 @@
-<script setup>
+<script setup lang="ts">
 import { useGameStore } from '@/stores/gameStore'
 import { Button, InputText } from 'primevue'
 
 const gameStore = useGameStore()
 const emits = defineEmits(['submit'])
-const answer = defineModel('', { required: true })
+const answer = defineModel({ required: true, default: '' })
 </script>
 
 <template>
