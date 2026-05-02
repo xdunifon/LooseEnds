@@ -92,8 +92,7 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
         var numPrompts = Settings.NumberOfRounds * promptsPerRound;
         
         // Order by random and take first n prompts
-        // TODO: Generating a random num for every single entry is not very efficient, 
-        // replace this in the future
+        // TODO: Is this order by random efficient?
         var promptOptions = await _context.Prompts
             .Where(p => p.Active)
             .OrderBy(x => EF.Functions.Random())
@@ -105,21 +104,36 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
         {
             var round = game.AddRound(i + 1);
             
-            // Order by random guids and take first n players
+            // Order by random guids
             var playerOptions = game.Players.OrderBy(x => Guid.NewGuid()).ToList();
 
             // Generate prompts for round
             for (int j = 0; j < promptsPerRound; j++)
             {
-                var selectedPrompt = promptOptions[0];
-                promptOptions.RemoveAt(0);
+                var selectedPrompt = promptOptions[j];
+                // promptOptions.RemoveAt(0);
 
                 var roundPrompt = round.AddPrompt(selectedPrompt.Content);
 
-                // Assign two players
-                roundPrompt.AssignPlayer(playerOptions[0]);
-                roundPrompt.AssignPlayer(playerOptions[1]);
-                playerOptions.RemoveRange(0, 2);
+                // Assign two players, bot response added up front
+                for (int p = 0; p < 2; p++)
+                {
+                    var player = playerOptions[0];
+                    playerOptions.RemoveAt(0);
+
+                    var playerResponse = roundPrompt.AssignPlayer(player);
+
+                    if (player.IsBot)
+                    {
+                        // Order by random
+                        var response = await _context.DefaultResponses
+                            .OrderBy(x => EF.Functions.Random())
+                            .FirstOrDefaultAsync()
+                            ?? throw new Exception("No default responses found for bot");
+
+                        playerResponse.AddAnswer(response.Content);
+                    }
+                }
             }
         }
 
