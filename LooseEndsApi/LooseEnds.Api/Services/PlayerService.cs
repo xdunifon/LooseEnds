@@ -13,6 +13,14 @@ public interface IPlayerService
 
 public class PlayerService(GameContext context, IHubContext<GameHub> hub) : BaseService(context), IPlayerService
 {
+    /// <summary>
+    /// Adds a new player to the specified game session. 
+    /// Validates that the session exists and is open for joining.
+    /// </summary>
+    /// <param name="gameCode"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    /// <exception cref="NotFoundException"></exception>
     public async Task<string> JoinAsync(string gameCode, string name)
     {
         var session = await _context.GameSessions

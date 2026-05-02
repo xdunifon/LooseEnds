@@ -13,6 +13,15 @@ public interface IRoundService
 
 public class RoundService(GameContext context, IHubContext<GameHub> hub) : BaseService(context), IRoundService
 {
+    /// <summary>
+    /// Submits an answer for a given response. Validates that the response belongs to the player 
+    /// and that the round is still accepting answers.
+    /// </summary>
+    /// <param name="gameCode"></param>
+    /// <param name="playerId"></param>
+    /// <param name="responseId"></param>
+    /// <param name="answer"></param>
+    /// <returns></returns>
     public async Task AnswerAsync(string gameCode, string playerId, int responseId, string answer)
     {
         var response = await _context.PlayerResponses
@@ -36,6 +45,14 @@ public class RoundService(GameContext context, IHubContext<GameHub> hub) : BaseS
         // check if all players have submitted and end round if so
     }
 
+    /// <summary>
+    /// Casts a vote for a given response. Validates that the response does not belong to the player
+    /// and that the round is still accepting votes.
+    /// </summary>
+    /// <param name="gameCode"></param>
+    /// <param name="playerId"></param>
+    /// <param name="responseId"></param>
+    /// <returns></returns>
     public async Task VoteAsync(string gameCode, string playerId, int responseId)
     {
         // There is technically a "bug" here where a user could call this endpoint for both voting options

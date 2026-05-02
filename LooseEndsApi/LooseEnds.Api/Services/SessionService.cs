@@ -31,6 +31,9 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
             .ThenInclude(r => r.RoundPrompts)
                 .ThenInclude(rp => rp.PlayerResponses);
 
+    /**
+    * Gets the full state of the game session, including players, rounds, prompts, and votes.
+    */
     public async Task<SessionStateDto> GetAsync(string gameCode, bool isHost, string userId)
     {
         var game = await FullStateIncludes(_context.GameSessions)
@@ -42,6 +45,12 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
         return result;
     }
 
+    /// <summary>
+    /// Creates a new game session with the specified game code and host ID.
+    /// </summary>
+    /// <param name="gameCode"></param>
+    /// <param name="hostId"></param>
+    /// <returns>The game code of the newly created session.</returns>
     public async Task<string> CreateAsync(string gameCode, string hostId)
     {
         var newGame = new GameSession(hostId, gameCode, Settings.DefaultPromptingDuration);
@@ -52,6 +61,12 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
         return newGame.GameCode;
     }
 
+    /// <summary>
+    /// Starts the game session by generating rounds, assigning prompts, and setting timers.
+    /// Bot will be added if player count is odd, and generated answers up front
+    /// </summary>
+    /// <param name="gameCode"></param>
+    /// <param name="roundDurationInSeconds"></param>
     public async Task StartAsync(string gameCode, int roundDurationInSeconds)
     {
         var game = _context.GameSessions
@@ -77,7 +92,8 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
         var numPrompts = Settings.NumberOfRounds * promptsPerRound;
         
         // Order by random and take first n prompts
-        // TODO: Generating a random num for every single entry is not very efficient, replace this in the future
+        // TODO: Generating a random num for every single entry is not very efficient, 
+        // replace this in the future
         var promptOptions = await _context.Prompts
             .Where(p => p.Active)
             .OrderBy(x => EF.Functions.Random())
@@ -110,6 +126,11 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
         await SaveContextAsync();
     }
 
+    /// <summary>
+    /// Advances the game session to the next phase. This method handles the 
+    /// transitions between different phases of the game
+    /// </summary>
+    /// <param name="gameCode"></param>
     public async Task NextAsync(string gameCode)
     {
         var game = await _context.GameSessions
@@ -123,7 +144,9 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
 
         var nextRound = game.GetNextRound();
 
-        // Game over
+        /**
+        * Game over
+        */
         if (nextRound == null)
         {
             var players = await _context.Players
@@ -137,7 +160,9 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
             return;
         }
 
-        // Start round (prompting)
+        /**
+        * Start round (prompting)
+        */
         if (!nextRound.AnswerDueUtc.HasValue)
         {
             nextRound.AnswerDueUtc = DateTime.UtcNow.AddSeconds(game.RoundTimer + 1);
@@ -148,7 +173,9 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
             return;
         }
 
-        // Stop prompting
+        /**
+        * Stop prompting
+        */
         if (!nextRound.PromptingCompleted)
         {
             nextRound.PromptingCompleted = true;
@@ -157,7 +184,9 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
             return;
         }
 
-        // Start voting
+        /**
+        * Start voting
+        */
         if (!nextRound.VotingRoundPromptId.HasValue)
         {
             var nextPrompt = nextRound.RoundPrompts.First();
@@ -176,7 +205,9 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
             return;
         }
             
-        // End voting for current prompt
+        /**
+        * End voting for current prompt
+        */
         if (nextRound.VotingRoundPrompt != null && !nextRound.VotingRoundPrompt.IsCompleted)
         {
             nextRound.VotingRoundPrompt.IsCompleted = true;
@@ -190,7 +221,9 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
         var prompt = nextRound.RoundPrompts
             .FirstOrDefault(p => !p.IsCompleted);
 
-        // Round is complete
+        /*
+        * Round is complete
+        */
         if (prompt == null)
         {
             nextRound.VotingRoundPrompt = null;
