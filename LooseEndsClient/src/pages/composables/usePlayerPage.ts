@@ -10,10 +10,14 @@ export const PageState = {
 
 export function usePlayerPage() {
   const gameStore = useGameStore()
-
   const answer = ref('')
+
   const state = computed(() => {
     if (!gameStore.activeRound) return PageState.Waiting
+
+    console.log('activeRound', gameStore.activeRound)
+    console.log('playerPrompt', gameStore.playerPrompt)
+    console.log('playerResponse', gameStore.playerResponse)
 
     if (
       gameStore.activeRound.answerDueUtc &&
@@ -34,6 +38,8 @@ export function usePlayerPage() {
     if (!gameStore.playerResponse) return
     if (!answer.value.trim()) return
     await gameService.answerAsync(gameStore.playerResponse.responseId, answer.value)
+
+    gameStore.playerResponse.answer = answer.value
   }
 
   return {

@@ -5,7 +5,9 @@ const apiClient = axios.create({
   baseURL: 'https://localhost:5001/game',
 })
 
-// Request Interceptor
+/**
+ * Request Interceptor to add Authorization header with Bearer token from auth store
+ */
 apiClient.interceptors.request.use(
   (config) => {
     const authStore = useAuthStore()
@@ -21,7 +23,9 @@ apiClient.interceptors.request.use(
   },
 )
 
-// Response Interceptor
+/**
+ * Response Interceptor to handle API errors globally
+ */
 apiClient.interceptors.response.use(
   (response) => {
     // Handle successful response

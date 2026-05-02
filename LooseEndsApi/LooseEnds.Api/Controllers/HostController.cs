@@ -36,6 +36,7 @@ public class HostController(ISessionService service, IHubContext<GameHub> hub) :
         await service.StartAsync(gameCode, req.RoundDurationInSeconds);
         var gameState = await service.GetAsync(gameCode, isHost, userId);
 
+        // Remove isHost, userId from this response
         await hub.Clients.Group(gameCode).SendAsync(GameEvents.GameStarted, gameState);
 
         return Ok();

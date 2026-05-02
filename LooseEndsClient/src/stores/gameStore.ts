@@ -10,6 +10,9 @@ import type { Round } from '@/types/round'
 import type { Prompt } from '@/types/prompt'
 
 export const useGameStore = defineStore('game', () => {
+  /**
+   * Main game state tracker object
+   */
   const gameState = ref<GameState>({
     gameCode: null,
     dateCreatedUtc: null,
@@ -21,6 +24,12 @@ export const useGameStore = defineStore('game', () => {
     players: [],
   })
 
+  /**
+   * COMPUTED HELPERS - these compute commonly used values
+   * based on the game state, such as active round, active
+   * voting prompt, if game has started, player's prompt
+   * and response, etc.
+   */
   const gameStarted = computed<boolean>(() =>
     gameState.value.rounds.some((r) => r.answerDueUtc !== null),
   )
@@ -55,24 +64,42 @@ export const useGameStore = defineStore('game', () => {
     return playerPrompt.value.voteOptions.find((v) => v.playerId === gameState.value.userId) ?? null
   })
 
+  /**
+   * Update state, used typically for initial load
+   * @param gameStateResponse
+   */
   const setState = (gameStateResponse: GameState) => {
     gameState.value = gameStateResponse
   }
 
+  /**
+   * SignalR event handlers. These will update the game state
+   * based on events from the server, and in some cases trigger
+   * additional requests to the server (ex: if host, when
+   * gameStarted event is received, send next() request to start
+   * first round).
+   */
   const initSignalR = async () => {
     await signalRService.startAsync()
     await signalRService.sendAsync(events.joinSession)
 
+    /**
+     * Game Started
+     */
     signalRService.on(events.gameStarted, async (dto: GameState) => {
       console.log(events.gameStarted, dto)
 
-      gameState.value = dto
+      // IsHost, UserId needs removed from this response
+      gameState.value = { ...dto, isHost: gameState.value.isHost, userId: gameState.value.userId }
 
       if (gameState.value.isHost) {
         await gameService.nextAsync()
       }
     })
 
+    /**
+     * Game Over
+     */
     signalRService.on(events.gameOver, (dto: { playerId: string; name: string; score: number }) => {
       console.log(events.gameOver, dto)
 
@@ -80,6 +107,9 @@ export const useGameStore = defineStore('game', () => {
       // Show final leaderboard + player winner
     })
 
+    /**
+     * Round Started
+     */
     signalRService.on(events.roundStarted, (dto: { number: number; endsAt: string }) => {
       console.log(events.roundStarted, dto)
 
@@ -99,6 +129,9 @@ export const useGameStore = defineStore('game', () => {
       }
     })
 
+    /**
+     * Voting Started
+     */
     signalRService.on(
       events.votingStarted,
       (dto: { number: number; promptId: number; voteDueUtc: string; options: VoteOption[] }) => {
@@ -117,6 +150,9 @@ export const useGameStore = defineStore('game', () => {
       },
     )
 
+    /**
+     * Voting Ended
+     */
     signalRService.on(events.votingEnded, () => {
       console.log(events.votingEnded)
 
@@ -128,19 +164,31 @@ export const useGameStore = defineStore('game', () => {
       activeRound.value.votingCompleted = true
     })
 
+    /**
+     * Round Ended
+     */
     signalRService.on(events.roundEnded, () => {
       console.log(events.roundEnded)
 
       // Make change to show leaderboard?
     })
 
+    /**
+     * Host only events
+     */
     if (gameState.value.isHost) {
+      /**
+       * Player Joined
+       */
       signalRService.on(events.playerJoined, (dto: Player) => {
         console.log(events.playerJoined, dto)
 
         gameState.value.players.push(dto)
       })
 
+      /**
+       * Player Submitted Answer
+       */
       signalRService.on(events.playerSubmitted, (playerId: string) => {
         console.log(events.playerSubmitted, playerId)
 
@@ -151,6 +199,9 @@ export const useGameStore = defineStore('game', () => {
         // If all players submitted, send out next()
       })
 
+      /**
+       * Player Voted
+       */
       signalRService.on(events.playerVoted, (playerId: string) => {
         console.log(events.playerVoted, playerId)
 
