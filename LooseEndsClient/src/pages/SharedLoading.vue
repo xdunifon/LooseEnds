@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import ProgressSpinner from 'primevue/progressspinner'
 </script>
 

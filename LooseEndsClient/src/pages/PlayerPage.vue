@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import PromptInput from '@/components/PromptInput.vue'
 import { PageState, usePlayerPage } from '@/pages/composables/usePlayerPage'
 

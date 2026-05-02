@@ -6,8 +6,8 @@ import { onMounted } from 'vue'
 defineEmits(['timeUp'])
 
 const props = defineProps<{
-  duration: number
-  date: Date | string
+  duration?: number
+  date?: Date | string
 }>()
 
 const { secondsRemaining, startTimer, percentageTimeRemaining } = useGameTimer(

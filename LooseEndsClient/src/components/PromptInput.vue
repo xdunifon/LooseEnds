@@ -9,7 +9,7 @@ const answer = defineModel({ required: true, default: '' })
 
 <template>
   <div>
-    <div>{{ gameStore.playerPrompt.prompt }}</div>
+    <div>{{ gameStore.playerPrompt?.prompt ?? 'Uh oh. No prompt found :(' }}</div>
     <InputText
       class="w-full"
       v-model="answer"

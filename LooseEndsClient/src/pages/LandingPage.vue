@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { gameService } from '@/services/gameService'
 import { useGameStore } from '@/stores/gameStore'
@@ -24,7 +24,7 @@ const join = async () => {
   await gameStore.initSignalR()
 }
 
-const rejoin = async (rejoined) => {
+const rejoin = async (rejoined: boolean) => {
   if (rejoined) {
     await gameService.getAsync()
     await gameStore.initSignalR()

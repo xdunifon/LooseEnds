@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { useGameStore } from '@/stores/gameStore'
 import { Button } from 'primevue'
 import { gameService } from '@/services/gameService'
@@ -15,8 +15,8 @@ const moveNext = async () => {
   <div>
     <div>
       <p>Host Page</p>
-      <p>{{ gameStore.gameCode }}</p>
-      <p>Players: {{ gameStore.players.map((p) => p.name).join(', ') }}</p>
+      <p>{{ gameStore.gameState.gameCode }}</p>
+      <p>Players: {{ gameStore.gameState.players.map((p) => p.name).join(', ') }}</p>
     </div>
 
     <Button v-if="!gameStore.activeRound" label="Start Game" @click="gameService.startAsync" />

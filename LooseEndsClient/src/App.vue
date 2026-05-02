@@ -8,7 +8,7 @@ const gameStore = useGameStore()
 </script>
 
 <template>
-  <LandingPage v-if="!gameStore.gameCode" />
-  <HostPage v-else-if="gameStore.isHost" />
+  <LandingPage v-if="!gameStore.gameState.gameCode" />
+  <HostPage v-else-if="gameStore.gameState.isHost" />
   <PlayerPage v-else />
 </template>

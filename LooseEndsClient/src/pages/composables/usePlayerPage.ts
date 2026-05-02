@@ -1,6 +1,5 @@
 import { gameService } from '@/services/gameService'
 import { useGameStore } from '@/stores/gameStore'
-import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
 
 export const PageState = {
@@ -11,7 +10,6 @@ export const PageState = {
 
 export function usePlayerPage() {
   const gameStore = useGameStore()
-  const { gameCode } = storeToRefs(gameStore)
 
   const answer = ref('')
   const state = computed(() => {
@@ -21,12 +19,12 @@ export function usePlayerPage() {
       gameStore.activeRound.answerDueUtc &&
       !gameStore.activeRound.promptingCompleted &&
       gameStore.playerPrompt &&
-      !gameStore.playerPrompt.answer &&
+      !gameStore.playerResponse?.answer &&
       gameStore.playerPrompt.prompt
     )
       return PageState.Prompting
 
-    if (gameStore.activeRound.votingDueUtc && !gameStore.activeRound.votingCompleted)
+    if (gameStore.activeVotingPrompt?.voteDueUtc && !gameStore.activeRound.votingCompleted)
       return PageState.Voting
 
     return PageState.Waiting
@@ -40,7 +38,7 @@ export function usePlayerPage() {
 
   return {
     answer,
-    gameCode,
+    gameCode: gameStore.gameState.gameCode,
     state,
 
     onAnswer,

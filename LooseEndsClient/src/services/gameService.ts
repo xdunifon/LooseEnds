@@ -1,11 +1,12 @@
 import apiClient from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import { useGameStore } from '@/stores/gameStore'
+import type { GameState } from '@/types/gameState'
 
 export const gameService = {
   // Get data for entire session
   async getAsync() {
-    const response = (await apiClient.get()).data
+    const response = (await apiClient.get<GameState>('')).data
     const gameStore = useGameStore()
     gameStore.setState(response)
   },
@@ -18,9 +19,9 @@ export const gameService = {
     authStore.setToken(response.token)
 
     const gameStore = useGameStore()
-    gameStore.isHost = true
-    gameStore.userId = response.hostId
-    gameStore.gameCode = response.gameCode
+    gameStore.gameState.isHost = true
+    gameStore.gameState.userId = response.hostId
+    gameStore.gameState.gameCode = response.gameCode
   },
 
   // Start the game
@@ -34,7 +35,7 @@ export const gameService = {
   },
 
   // Join an existing game using the game code and player's name
-  async joinAsync(newGameCode, playerName) {
+  async joinAsync(newGameCode: string, playerName: string) {
     const response = (await apiClient.post('join', { gameCode: newGameCode, name: playerName }))
       .data
 
@@ -42,17 +43,17 @@ export const gameService = {
     authStore.setToken(response.token)
 
     const gameStore = useGameStore()
-    gameStore.gameCode = newGameCode
-    gameStore.userId = response.playerId
+    gameStore.gameState.gameCode = newGameCode
+    gameStore.gameState.userId = response.playerId
   },
 
   // Answer a prompt using the existing response ID and the player's answer
-  async answerAsync(responseId, answer) {
+  async answerAsync(responseId: number, answer: string) {
     await apiClient.post('answer', { responseId, answer })
   },
 
   // Vote for a response by its ID
-  async voteAsync(responseId) {
+  async voteAsync(responseId: number) {
     await apiClient.post('vote', { responseId })
   },
 }

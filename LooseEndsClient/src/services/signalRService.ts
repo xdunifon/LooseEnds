@@ -2,6 +2,9 @@ import { useAuthStore } from '@/stores/authStore'
 import * as signalR from '@microsoft/signalr'
 
 class SignalRService {
+  connection: signalR.HubConnection | null
+  started: boolean
+
   constructor() {
     this.connection = null
     this.started = false
@@ -13,7 +16,7 @@ class SignalRService {
 
     this.connection = new signalR.HubConnectionBuilder()
       .withUrl('https://localhost:5001/hub', {
-        accessTokenFactory: () => authStore.token,
+        accessTokenFactory: () => authStore.token || '',
       })
       .withAutomaticReconnect()
       .build()
@@ -28,11 +31,11 @@ class SignalRService {
     }
   }
 
-  on(event, callback) {
+  on(event: string, callback: any) {
     this.connection?.on(event, callback)
   }
 
-  async sendAsync(method, ...args) {
+  async sendAsync(method: string, ...args: any) {
     try {
       await this.connection?.invoke(method, ...args)
     } catch (err) {

@@ -4,9 +4,9 @@ import { cookieUtil } from '@/utils/cookieUtil'
 
 export const useAuthStore = defineStore('auth', () => {
   const tokenCookie = cookieUtil.getCookie('session')
-  const token = ref(tokenCookie)
+  const token = ref<string | null>(tokenCookie)
 
-  const setToken = (newToken) => {
+  const setToken = (newToken: string) => {
     token.value = newToken
     document.cookie = `session=${newToken}; max-age=${60 * 60}; path=/` // One hour in seconds
   }

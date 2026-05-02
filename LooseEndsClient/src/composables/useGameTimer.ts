@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 
-export const useGameTimer = (duration: number, date: Date | string) => {
+export const useGameTimer = (duration?: number, date?: Date | string) => {
   const secondsRemaining = ref(0)
   let timer: number | undefined
 
@@ -24,8 +24,10 @@ export const useGameTimer = (duration: number, date: Date | string) => {
     if (date) {
       const cleanedDate = typeof date !== 'string' ? date : new Date(date)
       startTimerWithDate(cleanedDate)
-    } else {
+    } else if (duration) {
       startTimerWithDuration(duration)
+    } else {
+      throw new Error('Either duration or date must be provided to start the timer')
     }
   }
 
