@@ -1,31 +1,36 @@
 <script setup lang="ts">
-import { useGameStore } from '@/stores/gameStore'
 import { Button } from 'primevue'
-import { gameService } from '@/services/gameService'
 import GameTimer from '@/components/GameTimer.vue'
+import { HostState, useHostPage } from '@/pages/composables/useHostPage'
 
-const gameStore = useGameStore()
-
-const moveNext = async () => {
-  await gameService.nextAsync()
-}
+const { players, gameCode, dueDate, state, actions } = useHostPage()
 </script>
 
 <template>
   <div>
+    <!-- General Info -->
     <div>
       <p>Host Page</p>
-      <p>{{ gameStore.gameState.gameCode }}</p>
-      <p>Players: {{ gameStore.gameState.players.map((p) => p.name).join(', ') }}</p>
+      <p>{{ gameCode }}</p>
+      <p>Players: {{ players.map((p) => p.name).join(', ') }}</p>
     </div>
 
-    <Button v-if="!gameStore.activeRound" label="Start Game" @click="gameService.startAsync" />
-    <div
-      v-else-if="gameStore.activeRound.answerDueUtc && !gameStore.activeRound.promptingCompleted"
-    >
+    <!-- Not Started -->
+    <Button v-if="state == HostState.NotStarted" label="Start Game" @click="actions.start()" />
+
+    <!-- Prompting -->
+    <div v-else-if="state == HostState.Prompting">
       <p>Prompting</p>
-      <GameTimer :date="gameStore.activeRound.answerDueUtc" @time-up="moveNext" />
+      <GameTimer v-if="dueDate" :date="dueDate" @time-up="actions.moveNext" />
     </div>
-    <div v-else>Prompting completed</div>
+
+    <!-- Voting -->
+    <div v-else-if="state == HostState.Voting">Voting</div>
+
+    <!-- Leaderboard -->
+    <div v-else-if="state == HostState.Leaderboard">Leaderboard</div>
+
+    <!-- Lobby -->
+    <div v-else>Lobby</div>
   </div>
 </template>

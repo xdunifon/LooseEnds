@@ -15,10 +15,6 @@ export function usePlayerPage() {
   const state = computed(() => {
     if (!gameStore.activeRound) return PageState.Waiting
 
-    console.log('activeRound', gameStore.activeRound)
-    console.log('playerPrompt', gameStore.playerPrompt)
-    console.log('playerResponse', gameStore.playerResponse)
-
     if (
       gameStore.activeRound.answerDueUtc &&
       !gameStore.activeRound.promptingCompleted &&
