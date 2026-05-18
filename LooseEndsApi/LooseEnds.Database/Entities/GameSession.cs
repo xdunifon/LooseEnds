@@ -60,7 +60,7 @@ public class GameSession
         return Rounds
             .Where(r => !r.VotingCompleted)
             .OrderBy(r => r.Number)
-            .First();
+            .FirstOrDefault();
     }
     #endregion
 }
