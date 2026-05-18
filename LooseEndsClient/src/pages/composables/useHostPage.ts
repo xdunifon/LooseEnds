@@ -60,6 +60,16 @@ export function useHostPage() {
     gameCode: gameStore.gameState.gameCode,
     dueDate: dueDate,
     state,
+    data: {
+      prompt: computed(() => gameStore.activeVotingPrompt?.prompt ?? ''),
+      voteOptions: computed(
+        () =>
+          gameStore.activeVotingPrompt?.voteOptions.map((v) => ({
+            playerId: v.playerId,
+            answer: v.answer,
+          })) ?? [],
+      ),
+    },
     actions: {
       start,
       moveNext,

@@ -101,9 +101,24 @@ public class SessionService(GameContext context, IOptions<GameSettings> options,
                 var roundPrompt = round.AddPrompt(selectedPrompt.Content);
 
                 // Assign two players
-                roundPrompt.AssignPlayer(playerOptions[0]);
-                roundPrompt.AssignPlayer(playerOptions[1]);
-                playerOptions.RemoveRange(0, 2);
+                for (int p = 0; p < 2; p++)
+                {
+                    var player = playerOptions[0];
+                    playerOptions.RemoveAt(0);
+
+                    var playerResponse = roundPrompt.AssignPlayer(player);
+
+                    // Create bot response up front
+                    if (player.IsBot)
+                    {
+                        var response = await _context.DefaultResponses
+                            .OrderBy(x => EF.Functions.Random())
+                            .FirstOrDefaultAsync() 
+                            ?? throw new Exception("Couldn't find a default response for bot");
+
+                        playerResponse.AddAnswer(response.Content);
+                    }
+                }
             }
         }
 

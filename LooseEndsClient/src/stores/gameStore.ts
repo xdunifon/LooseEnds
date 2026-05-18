@@ -8,6 +8,8 @@ import type { VoteOption } from '@/types/voteOption'
 import type { Player } from '@/types/player'
 import type { Round } from '@/types/round'
 import type { Prompt } from '@/types/prompt'
+import type { PlayerResponse } from '@/types/playerResponse'
+import type { PlayerVote } from '@/types/playerVote'
 
 export const useGameStore = defineStore('game', () => {
   /**
@@ -103,6 +105,9 @@ export const useGameStore = defineStore('game', () => {
     signalRService.on(events.gameOver, (dto: { playerId: string; name: string; score: number }) => {
       console.log(events.gameOver, dto)
 
+      if (!activeRound.value) throw new Error(`Active round not found in event: ${events.gameOver}`)
+
+      activeRound.value.votingCompleted = true
       // Mark final round completed and end entire game
       // Show final leaderboard + player winner
     })
@@ -189,24 +194,45 @@ export const useGameStore = defineStore('game', () => {
       /**
        * Player Submitted Answer
        */
-      signalRService.on(events.playerSubmitted, (playerId: string) => {
-        console.log(events.playerSubmitted, playerId)
+      signalRService.on(events.playerSubmitted, async (response: PlayerResponse) => {
+        console.log(events.playerSubmitted, response)
 
-        if (activeRound.value) {
-          activeRound.value
+        const voteOption = activeRound.value?.prompts
+          .find((p) => p.voteOptions.some((v) => v.playerId === response.playerId))
+          ?.voteOptions.find((v) => v.playerId === response.playerId)
+
+        if (voteOption) {
+          voteOption.answer = response.answer
         }
-        // get active round, find prompt with plaerId, set submitted?
-        // If all players submitted, send out next()
+
+        if (activeRound.value?.prompts.every((p) => p.voteOptions.every((v) => v.answer))) {
+          await gameService.nextAsync()
+        }
       })
 
       /**
        * Player Voted
        */
-      signalRService.on(events.playerVoted, (playerId: string) => {
-        console.log(events.playerVoted, playerId)
+      signalRService.on(events.playerVoted, async (response: PlayerVote) => {
+        console.log(events.playerVoted, response)
 
-        // get active voting prompt, find player with this id, set submitted?
-        // If all players submitted, send out next()
+        const voteOption = activeRound.value?.prompts
+          .find((p) => p.voteOptions.some((v) => v.responseId === response.responseId))
+          ?.voteOptions.find((v) => v.responseId === response.responseId)
+        if (voteOption) {
+          voteOption.votedPlayerIds.push(response.playerId)
+        }
+
+        const totalCast =
+          activeRound.value?.prompts.reduce((sum, p) => {
+            return (
+              sum + p.voteOptions.reduce((vSum, option) => vSum + option.votedPlayerIds.length, 0)
+            )
+          }, 0) || 0
+
+        if (totalCast >= gameState.value.players.length) {
+          await gameService.nextAsync()
+        }
       })
     }
   }
