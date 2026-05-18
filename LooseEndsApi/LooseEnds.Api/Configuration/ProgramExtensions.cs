@@ -24,7 +24,7 @@ public static class ProgramExtensions
 
         builder.Services.AddDbContext<GameContext>(options => {
             options.UseSqlite(connectionString);
-            options.UseSeeding((context, isDev) => GameContext.SeedData(context, isDev));
+            options.UseSeeding((context, isDev) => GameContext.SeedData(context));
         });
     }
 
