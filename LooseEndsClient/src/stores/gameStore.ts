@@ -126,12 +126,14 @@ export const useGameStore = defineStore('game', () => {
       round.answerDueUtc = dto.endsAt
     })
 
-    signalRService.on(events.promptingEnded, () => {
+    signalRService.on(events.promptingEnded, async () => {
       console.log(events.promptingEnded)
 
       if (activeRound.value) {
         activeRound.value.promptingCompleted = true
       }
+
+      await gameService.nextAsync()
     })
 
     /**
@@ -158,7 +160,7 @@ export const useGameStore = defineStore('game', () => {
     /**
      * Voting Ended
      */
-    signalRService.on(events.votingEnded, () => {
+    signalRService.on(events.votingEnded, async () => {
       console.log(events.votingEnded)
 
       if (!activeRound.value) {
@@ -167,15 +169,17 @@ export const useGameStore = defineStore('game', () => {
 
       activeRound.value.activeVotingPromptId = null
       activeRound.value.votingCompleted = true
+
+      await gameService.nextAsync()
     })
 
     /**
      * Round Ended
      */
-    signalRService.on(events.roundEnded, () => {
+    signalRService.on(events.roundEnded, async () => {
       console.log(events.roundEnded)
 
-      // Make change to show leaderboard?
+      await gameService.nextAsync()
     })
 
     /**

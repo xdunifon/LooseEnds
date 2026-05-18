@@ -42,6 +42,7 @@ export const gameService = {
    * Move the game into the next state
    */
   async nextAsync() {
+    console.log('Moving to next phase...')
     await apiClient.post('next')
   },
 
